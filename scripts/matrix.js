@@ -232,44 +232,66 @@ class Vector extends Matrix {
 
 
 function mat4x4identity() {
-    var result = new Matrix(4, 4);
-    
+    var result    = new Matrix(4, 4);
+    result.values = [[ 1, 0, 0, 0],
+	                 [ 0, 1, 0, 0],
+					 [ 0, 0, 1, 0],
+					 [ 0, 0, 0, 1]];
     return result;
 }
 
 function mat4x4translate(tx, ty, tz) {
-    var result = new Matrix(4, 4);
-    
+    var result    = new Matrix(4, 4);
+	result.values = [[1, 0, 0, tx],
+			         [0, 1, 0, ty],
+			         [0, 0, 1, tz],
+			         [0, 0, 0, 1 ]];
     return result;
 }
 
 function mat4x4scale(sx, sy, sz) {
-    var result = new Matrix(4, 4);
-    
+    var result    = new Matrix(4, 4);
+    result.values = [[sx,  0,  0, 0],
+					 [ 0, sy,  0, 0],
+					 [ 0,  0, sz, 0],
+					 [ 0,  0,  0, 1]];
     return result;
 }
 
 function mat4x4rotatex(theta) {
-    var result = new Matrix(4, 4);
-    
+    var result    = new Matrix(4, 4);
+	result.values = [[ 1,               0,                  0, 0],
+	                 [ 0, Math.cos(theta), -(Math.sin(theta)), 0],
+					 [ 0, Math.sin(theta),    Math.cos(theta), 0],
+					 [ 0,               0,                  0, 0]];
     return result;
 }
 
 function mat4x4rotatey(theta) {
-    var result = new Matrix(4, 4);
-    
+    var result    = new Matrix(4, 4);
+    result.values = [[   Math.cos(theta), 0, Math.sin(theta), 0],
+	                 [                 0, 1,               0, 0],
+					 [-(Math.sin(theta)), 0, Math.cos(theta), 0],
+					 [                 0, 0,               0, 1]];
     return result;
 }
 
 function mat4x4rotatez(theta) {
-    var result = new Matrix(4, 4);
+    var result    = new Matrix(4, 4);
+	result.values = [[Math.cos(theta), -(Math.sin(theta)), 0, 0],
+	                 [Math.sin(theta),    Math.cos(theta), 0, 0],
+					 [              0,                  0, 1, 0],
+					 [              0,                  0, 0, 1]];
     
     return result;
 }
 
 function mat4x4shearxy(shx, shy) {
-    var result = new Matrix(4, 4);
-    
+    var result    = new Matrix(4, 4);
+    result.values = [[ 1, 0, shx, 0],
+	                 [ 0, 1, shy, 0],
+					 [ 0, 0,   1, 0],
+					 [ 0, 0,   0, 1]];
     return result;
 }
 
@@ -280,6 +302,33 @@ function mat4x4parallel(vrp, vpn, vup, prp, clip) {
     // 3. shear such that the DOP becomes parallel to the z-axis
     // 4. translate and scale into canonical view volume
     //    (x = [-1,1], y = [-1,1], z = [0,-1])
+	
+	//Step 	One
+	var vrpTranslate = mat4x4translate(-vrp.x, -vrp.y, -vrp.z);
+	//Step 2
+	var nAxis = new Vector(vpn);
+	nAxis.normalize();
+	var uAxis = new Vector(vup.cross(nAxis));
+	uAxis.normalize();
+	var vAxis = new Vector(nAxis.cross(uAxis));
+		
+	var vrcRotate    = new Matrix(4,4);
+	vrcRotate.values = [[uAxis.x, uAxis.y, uAxis.z, 0],
+	                    [vAxis.x, vAxis.y, vAxis.z, 0],
+						[nAxis.x, nAxis.y, nAxis.z, 0]
+						[      0,       0,       0, 1]];
+	//Step 3
+	//TODO- see if this at all correct
+	var cwx   = (Math.min(uAxis) + Math.max(uAxis))/2;
+    var cwy   = (Math.min(vAxis) + Math.max(vAxis))/2;
+    var cwz   = (Math.min(nAxis) + Math.max(nAxis))/2;
+    var dopx  = cwx - prp.x;
+    var dopy  = cwy - prp.y;
+    var dopz  = cwz - prp.z;
+    var shear = mat4x4shearxy(-dopx/dopy, -dopy/dopz);
+	//Step 4
+	
+	
     
 }
 
@@ -312,3 +361,4 @@ function Vector4(x, y, z, w) {
     result.values = [x, y, z, w];
     return result;
 }
+
