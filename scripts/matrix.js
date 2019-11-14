@@ -353,21 +353,21 @@ function mat4x4perspective(vrp, vpn, vup, prp, clip) {
 	var uAxis = new Vector(vup.cross(nAxis));
 	uAxis.normalize();
 	var vAxis = new Vector(nAxis.cross(uAxis));
-		
+	console.log(uAxis, vAxis, nAxis);	
 	var vrcRotate    = new Matrix(4,4);
 	vrcRotate.values = [[uAxis.x, uAxis.y, uAxis.z, 0],
 	                    [vAxis.x, vAxis.y, vAxis.z, 0],
-						[nAxis.x, nAxis.y, nAxis.z, 0]
+						[nAxis.x, nAxis.y, nAxis.z, 0],
 						[      0,       0,       0, 1]];
 	//Step 3
 	var prpTranslate = mat4x4translate(-prp.x, -prp.y, -prp.z);
 	
 	//Step 4 
-	var xAvg = (clip[1] + clip[0]/2);
-	var yAvg = (clip[3] + clip[2])/2);
+	var xAvg = ((clip[1] + clip[0])/2);
+	var yAvg = ((clip[3] + clip[2])/2);
 	var zAvg = 0;
 	
-	var cw = new Vector3(xAvg, yAvg, zAvg);
+	var cw  = new Vector3(xAvg, yAvg, zAvg);
 	var DOP = cw.subtract(prp);
 	
 	var shXPer = (-DOP.x)/DOP.z;
@@ -377,20 +377,26 @@ function mat4x4perspective(vrp, vpn, vup, prp, clip) {
 	//step 5
 	var back = clip[5];
 	
-	var ScalePerX = (2 * -(prp.z))/((clip[1] - clip[0]) * (prp.z - back));
-	var ScalePery = (2 * -(prp.z))/((clip[3] - clip[2]) * (prp.z - back));
+	var ScalePerX = (2 * -(prp.z))/((clip[1] - clip[0]) * (-prp.z + back));
+	var ScalePery = (2 * -(prp.z))/((clip[3] - clip[2]) * (-prp.z + back));
 	var ScalePerZ = (-1)/(-(prp.z) + back);
 	
 	var ScalePer  =  mat4x4scale(ScalePerX, ScalePery, ScalePerZ);
+	//Nper
+	console.log(ScalePer, shearCW, prpTranslate, vrcRotate, vrpTranslate)
+    var nPer = new Matrix(4,4); 
+    nPer     =  Matrix.multiply(ScalePer, shearCW, prpTranslate, vrcRotate, vrpTranslate);
+	return nPer;
 }
 
 function mat4x4mper() {
     // perspective projection from canonical view volume to far clip plane
-    var result = new Matrix(4, 4);
+    var result    = new Matrix(4, 4);
     result.values = [[ 1, 0, 0, 0],
 					 [ 0, 1, 0, 0],
 					 [ 0, 0, 1, 0],
-					 [ 0, 0,-1, 0]]; 
+					 [ 0, 0,-1, 0]];
+						
     return result;
 }
 
