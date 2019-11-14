@@ -52,13 +52,42 @@ function Init() {
 
     // event handler for pressing arrow keys
     document.addEventListener('keydown', OnKeyDown, false);
-    
     DrawScene();
 }
 
 // Main drawing code here! Use information contained in variable `scene`
 function DrawScene() {
     console.log(scene);
+    var perspectiveMatrix = mat4x4perspective(scene.view.vrp, scene.view.vpn, scene.view.vup, scene.view.prp, scene.view.clip);
+    var mPer = mat4x4mper();
+    var projectionToWindow = new Matrix(4,4);
+    projectionToWindow.values = [[view.width/2,             0, 0,  view.width/2],
+                                 [           0, view.height/2, 0, view.height/2],
+                                 [           0,             0, 1,             0],
+                                 [           0,             0, 0,             1]];
+
+    for(var i = 0; i < scene.models.length; i++){
+        let canonicalVertices = [];
+        for(let j = 0; j < scene.models[i].vertices.length; j++){
+           //translte to origin, rotate, translate back
+           OnKeyDown()
+           canonicalVertices.push(Matrix.multiply(perspectiveMatrix,scene.models[i].vertices[j]));
+        }
+        //TODO clip
+        for(let j = 0; j< scene.models[i].vertices.length; j++){
+            canonicalVertices[j] = Matrix.multiply(projectionToWindow, mPer, canonicalVertices[j]);
+        }
+        for(let j = 0; j < scene.models[i].edges.length; j++){
+            for(let k = 0; k < scene.models[i].edges[j].length - 1; k++){
+                let vert1, vert2;
+                vert1 = canonicalVertices[scene.models[i].edges[j][k]];
+                vert2 = canonicalVertices[scene.models[i].edges[j][k + 1]];
+                
+                DrawLine(vert1.x/vert1.w, vert1.y/vert1.w, vert2.x/vert2.w, vert2.y/vert2.w);
+            }
+        }
+    }
+    
 }
 
 // Called when user selects a new scene JSON file
